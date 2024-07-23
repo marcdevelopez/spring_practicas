@@ -1,62 +1,149 @@
-## Al crear el proyecto:
-Usaremos como dependencias:
-Developer Tools -> Spring Boot DevTools
-SQL -> MySQLDriver, y para trabajar a alto nivel con ORM -> Spring Data JPA.
+# Spring Data JPA Project
 
-## Primer paso
-### Comprobar las dependencias del POM en https://mvnrepository.com/
-## Segundo paso
-### Configuración de la base de datos en application.properties.
-Necesitamos asegurarnos de que MySQL esté escuchando en el puerto 3306, de modo que al instalar debe de estar configuradop en ese puerto, y si es otro que coincida con esta línea del archivo properties:
-spring.datasource.url=jdbc:mysql://localhost:3306/spring_data_jpa
-Debemos de instalar el MySQL Community Server.
-Debe de estar iniciado para ejecutar la aplicación de Spring Data.
-Nos podemos conectar con MySQL WorkBench por ejemplo, o DBeaver Community.
-También desde IntelliJ Idea Ultimate, desde Data Source > MySQL también podemos conectarnos.
-En MySQL Workbench crearíamos la base de datos con el mismo nombre que hemos puesto en el archivo properties (spring_data_jpa en este caso concreto).
-En IntelliJ vamos a MySQL desde Data Sources and Drivers, y configuramos MySQL.
-## Configuración de la Base de Datos en MySQL
+Este proyecto muestra cómo configurar y utilizar Spring Data JPA con MySQL.
 
-Para configurar la conexión a una base de datos MySQL, es necesario actualizar el archivo `application.properties` con las credenciales y el driver adecuados. A continuación se muestra un ejemplo de configuración:
+## Dependencias
+
+Para este proyecto, usaremos las siguientes dependencias:
+
+- **Developer Tools**: Spring Boot DevTools
+- **SQL**: MySQL Driver
+- **ORM**: Spring Data JPA
+
+## Primeros Pasos
+
+### 1. Comprobar las dependencias del POM
+
+Asegúrate de que las dependencias necesarias estén incluidas en el archivo `pom.xml`. Puedes buscar y añadir las dependencias desde [Maven Repository](https://mvnrepository.com/).
+
+### 2. Configuración de la Base de Datos
+
+#### Configuración en `application.properties`
+
+Asegúrate de que MySQL esté escuchando en el puerto 3306 (o el puerto configurado en tu instalación). Configura la conexión a la base de datos en el archivo `application.properties`:
 
 ```properties
 # Configuración del datasource
-spring.datasource.url=jdbc:mysql://localhost:3306/tu_base_de_datos
+spring.datasource.url=jdbc:mysql://localhost:3306/spring_data_jpa
 spring.datasource.username=root
 spring.datasource.password=tu_contraseña
 spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+
+# Configuración de JPA
 spring.jpa.show-sql=true
 spring.jpa.properties.hibernate.format_sql=true
 spring.jpa.hibernate.ddl-auto=create
 spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQLDialect
 spring.sql.init.mode=always
 spring.jpa.defer-datasource-initialization=true
-````
+```
 
-Es importante asegurarse de que las credenciales (nombre de usuario y contraseña) sean las mismas que se utilizaron al instalar MySQL.
-Establecemos spring.jpa.show-sql=true en desarrollo nunca en producción, para poder ver las consultas.
-spring.jpa.hibernate.ddl-auto=create también es solo en desarrollo para que se cree automáticamente la BBDD, sino usaríamos update o none...
-Para especificar concretamente la BBDD usamos MySQLDialect, que encontraremos en las librerías externas de Maven:org.hibernate.orm:hibernate-core, en su carpeta dialect. Puede variar la versión.
-Para poder acceder a la BBDD externa de MySQL debemos de indicarlo con: spring.sql.init.mode=always.
-Y con spring.jpa.defer-datasource-initialization=true evitamos que no le de tiempo a crear el esquema, de modo que al insertar los datos ya esté creado el esquema de la base de datos.
-Conviene que cada capa tenga su propio modelo, en este caso creamos una carpeta llamada model en com.example.
-Y dentro de esa carpeta creamos en nusetro caso una entidad Employee, con una clase a la que le agregamos la anotación @Entity, y la anotación @Table para poder usar la tabla en SQL, para que el framework de persistencia luego lo gestione todo.
-Llamamos a la tabla "employee", todo en minúsculas o todo mayúsculas, para que no arroje errores con la base de datos.
-Para agregar la clave primaria a esta tabla usamos la anotación @Id al atributo de la clase (id).
-Con @GeneratedValue(strategy = GenerationType.IDENTITY) conseguimos que cada tabla genere sus propios valores.
-Algo similar hacemos con @Column para el campo o atributo fullName.
-Aconsejable eel constructor vacío, y además agregar getters y setters, y un constructor con todos los parámetros.
-Así se podrá generar la información que llegue de base de datos en objetos, haciéndolo el propio framework.
-No nos olvidamos tampoco de el método toString.
-Ahora bien, en la carpeta repository tendremos una interface que extenderá a JpaRepository.
-La anotación @Repository de la interface no es obligatoria, ya que al extender de JpaRepository ya lo detecta en framework.
-spring jpa se construye así: DB -> JDBC -> Hibernate -> Spring Data JPA, de modo que son varias capas sobrepuestas, de modo que con spring Data JPA podemos hacer muchas cosas con poco esfuerzo.
-Crear las interfaces de Repository si queremos hacer operaciones sí que es necesario.
-Gracias a la anotación @Repository de las interfaces de repository podemos manejar la base de datos desde spring, mediante el ApplicationContext.getBean, puediendo por ejemplo obtener todos los registros de una tabla con findAll(). Y si quisiéramos personalizar la manera de manejar la base de datos crearemos métodos en las interfaces del repository.
-Cuando usamos Optional<> debemos de estar seguros que el resultado sea solo uno, una propiedad que sea única, si no dará error. También se puede unir dos condiciones con And o usar Or. Si es más de un resultado usaremos un List<> y la condición...
-Resumiendo, siempre crear las entidades y customizar los repositorios.
-Gracias a spring nos abstraemos de todo lo que hay por debajo y no necesitamos usar directamente Hibernate, sino que lo hacemos desde spring.
-Verificación de las Tablas en MySQL
-Para verificar si las tablas se han creado correctamente, se puede utilizar MySQL Workbench. Al conectar a la base de datos desde MySQL Workbench, deberíamos poder ver las tablas creadas por Spring Data JPA.
+**Notas:**
+- Asegúrate de que las credenciales (`username` y `password`) sean correctas.
+- `spring.jpa.show-sql=true` es útil en desarrollo para ver las consultas SQL generadas, pero no debe usarse en producción.
+- `spring.jpa.hibernate.ddl-auto=create` crea automáticamente la base de datos; en producción, usa `update` o `none`.
+- `spring.sql.init.mode=always` asegura que los scripts SQL se ejecuten siempre al iniciar la aplicación.
+- `spring.jpa.defer-datasource-initialization=true` garantiza que el esquema de la base de datos se cree antes de insertar datos.
 
-En este momento, si no se han creado tablas, es porque el esquema aún no se ha generado. A medida que continuamos configurando Spring Data JPA, las tablas se crearán automáticamente según las entidades definidas en el proyecto.
+### 3. Crear la Base de Datos
+
+Puedes crear la base de datos usando MySQL Workbench, DBeaver o IntelliJ IDEA:
+
+```sql
+CREATE DATABASE spring_data_jpa;
+```
+
+Configura la conexión a la base de datos en IntelliJ IDEA desde `Data Sources and Drivers`.
+
+## Crear Entidades y Repositorios
+
+### Crear la Entidad `Employee`
+
+En la carpeta `model`, crea la clase `Employee`:
+
+```java
+package com.example.model;
+
+import javax.persistence.*;
+
+@Entity
+@Table(name = "employee")
+public class Employee {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "full_name")
+    private String fullName;
+
+    // Constructor vacío
+    public Employee() {}
+
+    // Constructor con parámetros
+    public Employee(String fullName) {
+        this.fullName = fullName;
+    }
+
+    // Getters y Setters
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getFullName() {
+        return fullName;
+    }
+
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
+
+    @Override
+    public String toString() {
+        return "Employee{" +
+                "id=" + id +
+                ", fullName='" + fullName + '\'' +
+                '}';
+    }
+}
+```
+
+### Crear el Repositorio `EmployeeRepository`
+
+En la carpeta `repository`, crea una interfaz que extienda `JpaRepository`:
+
+```java
+package com.example.repository;
+
+import com.example.model.Employee;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface EmployeeRepository extends JpaRepository<Employee, Long> {
+    // Puedes agregar métodos personalizados aquí
+}
+```
+
+### Verificación de las Tablas en MySQL
+
+Para verificar que las tablas se han creado correctamente, usa MySQL Workbench:
+
+1. Conéctate a la base de datos.
+2. Verifica que la tabla `employee` haya sido creada.
+
+Si las tablas no se han creado, asegúrate de que el esquema de la base de datos esté configurado correctamente y que las entidades estén definidas en el proyecto.
+
+## Resumen
+
+- Asegúrate de que MySQL esté correctamente configurado y en funcionamiento.
+- Configura `application.properties` con las credenciales y ajustes necesarios.
+- Crea las entidades y los repositorios necesarios para interactuar con la base de datos.
+- Verifica que las tablas se hayan creado correctamente usando MySQL Workbench o una herramienta similar.
+
+¡Ahora estás listo para trabajar con Spring Data JPA y MySQL en tu proyecto!
+```
