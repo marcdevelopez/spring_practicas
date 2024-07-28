@@ -1,55 +1,225 @@
 # Tu primera API Rest con Spring Boot
+___
+Este proyecto muestra cómo crear una API REST usando Spring Boot.
 
-Vamos aver:
-Entidades y repositorios: @Entity, @Repository
-Servicios: @Service
-Controladores REST: @RestController
-Metodos HTTP: GET, POST, PUT, DELETE
+## Tecnologías y Anotaciones Utilizadas
 
-Vamos a crear una api rest con spring bbot.
+- **Entidades y Repositorios**: `@Entity`, `@Repository`
+- **Servicios**: `@Service`
+- **Controladores REST**: `@RestController`
+- **Métodos HTTP**: `GET`, `POST`, `PUT`, `DELETE`
 
-Usaremos el ide IntelliJ IDEA, con Maven.
+## Estructura del Proyecto
 
-Como dependencias  de Web usaremos Spring Web, y para SQL en este caso usaremos una embebida (H2 Database) y Spring Data JPA.
-Además usaremos las Spring Boot DevTools que nos ayudará con reinicios rápidos.
+El proyecto sigue una estructura orientada a capas:
+1. **Model**: Contiene las entidades del proyecto.
+2. **Repository**: Contiene los repositorios que gestionan la persistencia.
+3. **Service**: Contiene la lógica de negocio.
+4. **Controller**: Contiene los controladores que manejan las solicitudes HTTP.
 
-Primero vamos a crear una entidad y para ello creamos una carpeta model.
-Tambien creamos un paquete servicio, otro controller y otro repository. A esto le llamamos una estructura orientada a capas.
-Los controladores reciben peticiones de http.
-Manufacturer es una entidad dentro de model, por es lo anotamos con @Entity, que se almacena en base de datos y por ello lo anotamos con @Table.
-No nos olvidamos de crear atributos, y los constructores, y los getters y setters.
-A continuación creamos un repositorio: ManufacturerRepository. Como todo gira en torno a las entidades, primero es mejor crear la entidad, y luego la capa de persistencia, y por última lógica de negocio y controlador.
-Lo anotamos como @Repository para indicar que es de tipo repositorio.
-Con services tambien hacemos otra interface donde podremos manejar la base de datos, para obtener datos (findAll(), etc) y agregandolos a un objeto List<Manufacturer> por ejemplo.
-Con un Optional por otro lado, obtendríamos solo un resultado, por lo que debemos de tener cuidado para asegurar un solo resultado en la búsqueda, por ejemplo por Id, o con otro campo que esté anotado con @Column(unique = true).
-Todos estos métodos mencionados son de consulta, o RETRIEVE (recuperar).
-También podemos hacer un CREATE con save() y un DELETE con deleteById(Long id), y la lógica de negocio que queramos, y dentro del servicio de cada entidad crear su propia lógica.
-Al implementar la interfaz implementariamos tambien todos sus métodos. Pero además agregamos una anotación @Service a la clase para mostrar el tipo de Bean que implementamos.
-Ahora bien , en la carpeta controller tendremos el contralador, una clase que tendrá la anotación @RestController, que no es lo mismo que @Controller, ya que necesitamos este controller especializado para trabajar con api rest con distintos endspoints o recursos que devolverán información de forma neutra (por ejemplo json), así se podrá interpretar desde el frontend sin problema, desacoplando asi de forma cómoda el cliente del servidor.
-En cada método que usemos en el Controller anotaremos @Get... o @Post...
-Para ejecutar este programa habria que instalar "postman".
-En el archivo application.properties no hemos configurado nada ya que estamos dejando que h2 lo haga, según hemos especificado en el pom.xml
-Además tendremos que configurar el esquema en application.properties: para que los logs se vean un poco mejor: spring.main.banner-mode=off, y ajustamos el formato de las trazas de log para que se vea como nos guste y se vea mejor el error: que se vea el nombre de la clase que esté reportando el error en cyan y el mensaje: logging.pattern.console=%clr(%logger{39}){cyan} - %msg%n
-Podemos evitar errores si usamos la anotación @Column(name = "nombre_del_campo_en_la_tabla") en la entidad (carpeta modelo) para que se puedan crear las tablas correctamente.
-Deberíamos manejar los fallos o excepciones al manejar los "manufacturer" o entidades para poder capturar fallos y resolverlos.
-Crear una API REST involucra todas las operaciones si las queremos (Crear, leer, modificar y eliminar...), y evitar nombres reservados (year sería problemático dependiendo de la BBDD que usemos, de modo que podríamos cambiar el nombre de la columna en la anotación @Column(name = "...")) y si no cambiar el application.properties para evitar estos problemas..
-Con una aplicación como postman podriamos crear una nueva colección y en el GET poner la url a nuestra api creada y a nuestro repositorio manufacturers: http://localhost:8080/api/manufacturers/1, teniendo nuestro proyecto ejecutándose, y al enviar la peticion veriamos el resultado:
-{
-"id": 1,
-"name": "manufacturer1",
-"numEmployees": 1000,
-"year": 1990
+## Dependencias
+
+Usaremos el IDE IntelliJ IDEA con Maven y las siguientes dependencias:
+- **Spring Web**
+- **H2 Database**
+- **Spring Data JPA**
+- **Spring Boot DevTools**
+
+## Primeros Pasos
+
+### 1. Crear una Entidad
+
+Crea la carpeta `model` y dentro de ella la entidad `Manufacturer`:
+
+```java
+package com.example.model;
+
+import javax.persistence.*;
+
+@Entity
+@Table(name = "manufacturer")
+public class Manufacturer {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "name")
+    private String name;
+
+    @Column(name = "num_employees")
+    private int numEmployees;
+
+    @Column(name = "year")
+    private int year;
+
+    // Constructor vacío
+    public Manufacturer() {}
+
+    // Constructor con parámetros
+    public Manufacturer(String name, int numEmployees, int year) {
+        this.name = name;
+        this.numEmployees = numEmployees;
+        this.year = year;
+    }
+
+    // Getters y Setters
+    // ...
 }
-Si queremos enviar datos habría que cambiar a POST en postman, y cambiar a "Body", "raw" y en JSON, cambiando el "name" y en la url enviarlo sib id (en este caso: http://localhost:8080/api/manufacturers), y en el JSON tambien quitar el id, para dejar claro que es una petición nueva:
+```
 
-    "name": "manufacturer2",
-    "numEmployees": 1000,
-    "year": 1990
+### 2. Crear el Repositorio
+
+Crea la carpeta `repository` y dentro de ella `ManufacturerRepository`:
+
+```java
+package com.example.repository;
+
+import com.example.model.Manufacturer;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface ManufacturerRepository extends JpaRepository<Manufacturer, Long> {
+    // Métodos personalizados si es necesario
 }
-Creándose entonces el id 2:
-{
-"id": 2,
-"name": "manufacturer2",
-"numEmployees": 1000,
-"year": 1990
+```
+
+### 3. Crear el Servicio
+
+Crea la carpeta `service` y dentro de ella `ManufacturerService`:
+
+```java
+package com.example.service;
+
+import com.example.model.Manufacturer;
+import com.example.repository.ManufacturerRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
+
+@Service
+public class ManufacturerService {
+
+    @Autowired
+    private ManufacturerRepository manufacturerRepository;
+
+    public List<Manufacturer> findAll() {
+        return manufacturerRepository.findAll();
+    }
+
+    public Optional<Manufacturer> findById(Long id) {
+        return manufacturerRepository.findById(id);
+    }
+
+    public Manufacturer save(Manufacturer manufacturer) {
+        return manufacturerRepository.save(manufacturer);
+    }
+
+    public void deleteById(Long id) {
+        manufacturerRepository.deleteById(id);
+    }
 }
+```
+
+### 4. Crear el Controlador
+
+Crea la carpeta `controller` y dentro de ella `ManufacturerController`:
+
+```java
+package com.example.controller;
+
+import com.example.model.Manufacturer;
+import com.example.service.ManufacturerService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Optional;
+
+@RestController
+@RequestMapping("/api/manufacturers")
+public class ManufacturerController {
+
+    @Autowired
+    private ManufacturerService manufacturerService;
+
+    @GetMapping
+    public List<Manufacturer> findAll() {
+        return manufacturerService.findAll();
+    }
+
+    @GetMapping("/{id}")
+    public Optional<Manufacturer> findById(@PathVariable Long id) {
+        return manufacturerService.findById(id);
+    }
+
+    @PostMapping
+    public Manufacturer create(@RequestBody Manufacturer manufacturer) {
+        return manufacturerService.save(manufacturer);
+    }
+
+    @PutMapping("/{id}")
+    public Manufacturer update(@PathVariable Long id, @RequestBody Manufacturer manufacturer) {
+        manufacturer.setId(id);
+        return manufacturerService.save(manufacturer);
+    }
+
+    @DeleteMapping("/{id}")
+    public void deleteById(@PathVariable Long id) {
+        manufacturerService.deleteById(id);
+    }
+}
+```
+
+## Configuración
+
+No es necesario configurar `application.properties` para H2, ya que se autoconfigura según el `pom.xml`. Sin embargo, para mejorar los logs, agrega lo siguiente en `application.properties`:
+
+```properties
+spring.main.banner-mode=off
+logging.pattern.console=%clr(%logger{39}){cyan} - %msg%n
+```
+
+## Uso de Postman
+
+Para probar la API, usa [Postman](https://www.postman.com/):
+
+1. **GET** - Obtener todos los fabricantes:
+    - URL: `http://localhost:8080/api/manufacturers`
+2. **GET** - Obtener un fabricante por ID:
+    - URL: `http://localhost:8080/api/manufacturers/{id}`
+3. **POST** - Crear un nuevo fabricante:
+    - URL: `http://localhost:8080/api/manufacturers`
+    - Body (raw JSON):
+    ```json
+    {
+        "name": "manufacturer2",
+        "numEmployees": 1000,
+        "year": 1990
+    }
+    ```
+4. **PUT** - Actualizar un fabricante existente:
+    - URL: `http://localhost:8080/api/manufacturers/{id}`
+    - Body (raw JSON):
+    ```json
+    {
+        "name": "updatedName",
+        "numEmployees": 1500,
+        "year": 2000
+    }
+    ```
+5. **DELETE** - Eliminar un fabricante por ID:
+    - URL: `http://localhost:8080/api/manufacturers/{id}`
+
+## Manejo de Errores
+
+Para manejar errores y excepciones, puedes agregar controladores de excepción personalizados en tu controlador para capturar y manejar fallos.
+
+## Resumen
+
+Crear una API REST involucra todas las operaciones CRUD (Crear, Leer, Modificar, Eliminar) y el uso adecuado de anotaciones y configuraciones para garantizar un funcionamiento correcto y eficiente.
+
+¡Ahora estás listo para crear y manejar una API REST con Spring Boot!
