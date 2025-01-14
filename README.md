@@ -60,10 +60,6 @@ Este repositorio contiene una serie de prácticas realizadas durante un curso de
 
 Este repositorio es parte de un curso de aprendizaje y, por lo tanto, no se aceptan contribuciones externas en este momento.
 
-## Licencia
-
-Este proyecto se distribuye bajo la Licencia MIT. Consulta el archivo [LICENSE](LICENSE) para más detalles.
-
 ## Agradecimientos
 
 Agradecimientos especiales al instructor del curso y a la comunidad de desarrolladores que han contribuido con recursos y conocimientos para la realización de estas prácticas.
